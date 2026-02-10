@@ -32,18 +32,32 @@ def format_report(
         "no_price_data": "缺少价格数据",
         "insufficient_history": "历史数据不足",
     }
+    signal_map = {
+        "BUY": "买入",
+        "HOLD": "观望",
+        "SELL": "卖出",
+    }
     lines: List[str] = []
     lines.append(f"每日交易简报（{generated_at}）")
     lines.append("")
-    lines.append("策略建议")
+    lines.append("结论表")
+    lines.append("| 标的 | 建议 | 评分 | 价格 | 主要原因 |")
+    lines.append("| --- | --- | --- | --- | --- |")
     for r in reports:
         price = f"${r.price:,.2f}" if r.price is not None else "n/a"
-        lines.append(f"- {r.ticker}（{r.name}）：{r.signal} | 评分 {r.score:.1f} | 价格 {price}")
-        lines.append(f"  原因：{reason_map.get(r.reason, r.reason)}")
-        if r.directional:
-            lines.append(f"  方向性：{r.directional}")
-        if r.income:
-            lines.append(f"  收益型：{r.income}")
+        signal = signal_map.get(r.signal, r.signal)
+        reason = reason_map.get(r.reason, r.reason)
+        lines.append(f"| {r.ticker}（{r.name}） | {signal} | {r.score:.1f} | {price} | {reason} |")
+
+    lines.append("")
+    lines.append("分析要点")
+    for r in reports:
+        if r.directional or r.income:
+            lines.append(f"- {r.ticker}（{r.name}）")
+            if r.directional:
+                lines.append(f"  方向性：{r.directional}")
+            if r.income:
+                lines.append(f"  收益型：{r.income}")
 
     lines.append("")
     lines.append("资讯要点")

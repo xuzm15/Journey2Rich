@@ -72,7 +72,7 @@ def push_to_discord(message: str) -> None:
         chunks.append(chunk)
 
     for chunk in chunks:
-        payload = {"content": f"```\n{chunk}\n```"}
+        payload = {"content": chunk}
         resp = requests.post(settings.discord_webhook_url, json=payload, timeout=20)
         resp.raise_for_status()
 
