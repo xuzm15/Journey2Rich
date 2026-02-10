@@ -22,6 +22,8 @@ class Settings:
         "NEWS_FEEDS",
         "https://finance.yahoo.com/news/rssindex,https://www.reutersagency.com/feed/?best-topics=business-finance&post_type=best",
     )
+    openai_api_key: str = os.getenv("OPENAI_API_KEY", "").strip()
+    openai_model: str = os.getenv("OPENAI_MODEL", "gpt-5.2").strip()
 
 
 def get_settings() -> Settings:

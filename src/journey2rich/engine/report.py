@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from journey2rich.engine.news import NewsItem
+from journey2rich.engine.llm_types import LLMBrief
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,7 @@ def format_report(
     reports: List[SignalReport],
     news: List[NewsItem],
     generated_at: str,
+    llm: Optional[LLMBrief] = None,
 ) -> str:
     reason_map = {
         "score_and_trend": "基本面得分高且趋势向上",
@@ -51,5 +53,13 @@ def format_report(
         for item in news:
             lines.append(f"- {item.title} ({item.source})")
             lines.append(f"  {item.link}")
+
+    if llm:
+        lines.append("")
+        lines.append("模型解读（简短）")
+        lines.extend([f"- {line}" for line in llm.short.splitlines() if line.strip()])
+        lines.append("")
+        lines.append("模型解读（详细）")
+        lines.extend([f"- {line}" for line in llm.long.splitlines() if line.strip()])
 
     return "\n".join(lines)

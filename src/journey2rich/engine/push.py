@@ -8,6 +8,7 @@ import requests
 from journey2rich.config import get_settings
 from journey2rich.data import YFinanceProvider
 from journey2rich.engine.news import fetch_news, filter_news, now_iso
+from journey2rich.engine.llm import generate_llm_brief
 from journey2rich.engine.options import build_option_suggestions
 from journey2rich.engine.report import SignalReport, format_report
 from journey2rich.engine.watchlist import load_watchlist
@@ -54,16 +55,26 @@ def build_daily_brief() -> str:
     keywords = _news_keywords(watchlist.tickers, watchlist.names)
     matched = filter_news(news_items, keywords, limit=8)
 
-    return format_report(reports, matched, now_iso())
+    llm = generate_llm_brief(reports, matched)
+    return format_report(reports, matched, now_iso(), llm=llm)
 
 
 def push_to_discord(message: str) -> None:
     settings = get_settings()
     if not settings.discord_webhook_url:
         raise RuntimeError("DISCORD_WEBHOOK_URL is not configured")
-    payload = {"content": f"```\n{message}\n```"}
-    resp = requests.post(settings.discord_webhook_url, json=payload, timeout=20)
-    resp.raise_for_status()
+    max_chunk = 1800
+    chunks = []
+    text = message
+    while text:
+        chunk = text[:max_chunk]
+        text = text[max_chunk:]
+        chunks.append(chunk)
+
+    for chunk in chunks:
+        payload = {"content": f"```\n{chunk}\n```"}
+        resp = requests.post(settings.discord_webhook_url, json=payload, timeout=20)
+        resp.raise_for_status()
 
 
 def run_push() -> None:
