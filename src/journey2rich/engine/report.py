@@ -23,23 +23,30 @@ def format_report(
     news: List[NewsItem],
     generated_at: str,
 ) -> str:
+    reason_map = {
+        "score_and_trend": "基本面得分高且趋势向上",
+        "weak_score_and_trend_down": "基本面较弱且趋势向下",
+        "filters_not_met": "未满足过滤条件",
+        "no_price_data": "缺少价格数据",
+        "insufficient_history": "历史数据不足",
+    }
     lines: List[str] = []
-    lines.append(f"Daily Trading Brief ({generated_at})")
+    lines.append(f"每日交易简报（{generated_at}）")
     lines.append("")
-    lines.append("Signals")
+    lines.append("策略建议")
     for r in reports:
         price = f"${r.price:,.2f}" if r.price is not None else "n/a"
-        lines.append(f"- {r.ticker} ({r.name}): {r.signal} | score {r.score:.1f} | px {price}")
-        lines.append(f"  reason: {r.reason}")
+        lines.append(f"- {r.ticker}（{r.name}）：{r.signal} | 评分 {r.score:.1f} | 价格 {price}")
+        lines.append(f"  原因：{reason_map.get(r.reason, r.reason)}")
         if r.directional:
-            lines.append(f"  directional: {r.directional}")
+            lines.append(f"  方向性：{r.directional}")
         if r.income:
-            lines.append(f"  income: {r.income}")
+            lines.append(f"  收益型：{r.income}")
 
     lines.append("")
-    lines.append("News Highlights")
+    lines.append("资讯要点")
     if not news:
-        lines.append("- No matched headlines today.")
+        lines.append("- 今日无匹配要闻。")
     else:
         for item in news:
             lines.append(f"- {item.title} ({item.source})")

@@ -5,10 +5,26 @@ from typing import Dict, Optional
 import pandas as pd
 
 
+def _filter_liquid(chain: pd.DataFrame) -> pd.DataFrame:
+    if chain.empty:
+        return chain
+    df = chain.copy()
+    if "volume" in df.columns:
+        df = df[df["volume"].fillna(0) >= 10]
+    if "openInterest" in df.columns:
+        df = df[df["openInterest"].fillna(0) >= 50]
+    if "bid" in df.columns and "ask" in df.columns:
+        mid = (df["bid"].fillna(0) + df["ask"].fillna(0)) / 2
+        spread = (df["ask"].fillna(0) - df["bid"].fillna(0))
+        df = df[(mid > 0) & (spread / mid <= 0.15)]
+    return df
+
+
 def _pick_otm_call(chain: pd.DataFrame, spot: float) -> Optional[Dict]:
     if chain.empty or "strike" not in chain.columns:
         return None
-    calls = chain[chain["strike"] > spot * 1.05].sort_values("strike")
+    calls = _filter_liquid(chain)
+    calls = calls[calls["strike"] > spot * 1.05].sort_values("strike")
     if calls.empty:
         return None
     row = calls.iloc[0]
@@ -22,7 +38,8 @@ def _pick_otm_call(chain: pd.DataFrame, spot: float) -> Optional[Dict]:
 def _pick_otm_put(chain: pd.DataFrame, spot: float) -> Optional[Dict]:
     if chain.empty or "strike" not in chain.columns:
         return None
-    puts = chain[chain["strike"] < spot * 0.95].sort_values("strike", ascending=False)
+    puts = _filter_liquid(chain)
+    puts = puts[puts["strike"] < spot * 0.95].sort_values("strike", ascending=False)
     if puts.empty:
         return None
     row = puts.iloc[0]

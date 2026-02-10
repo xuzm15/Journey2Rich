@@ -13,8 +13,8 @@ def generate_signal(
     ticker: str,
     start: str,
     end: str,
-    score_threshold: float = 3.0,
-    sell_threshold: float = 1.0,
+    score_threshold: float = 4.0,
+    sell_threshold: float = 1.5,
 ) -> Dict:
     info = provider.get_fundamentals(ticker)
     score = score_fundamentals(info)

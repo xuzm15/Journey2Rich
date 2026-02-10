@@ -30,10 +30,23 @@ def fetch_news(feed_urls: Iterable[str], limit: int = 30) -> List[NewsItem]:
 
 def filter_news(items: List[NewsItem], keywords: Dict[str, List[str]], limit: int = 8) -> List[NewsItem]:
     matched: List[NewsItem] = []
+    seen = set()
     for item in items:
         title_l = item.title.lower()
-        if any(any(k.lower() in title_l for k in ks) for ks in keywords.values()):
-            matched.append(item)
+        hit = False
+        for ks in keywords.values():
+            for k in ks:
+                key = k.lower()
+                if key and key in title_l:
+                    hit = True
+                    break
+            if hit:
+                break
+        if hit:
+            sig = (item.title, item.source)
+            if sig not in seen:
+                matched.append(item)
+                seen.add(sig)
         if len(matched) >= limit:
             break
     return matched
